@@ -11,6 +11,13 @@ public class PagamentoListener {
 
     @RabbitListener(queues = "payment_order_detail")
     public void receiveMessage(@Payload PagamentoDto pagamentoDto){
+        System.out.println(pagamentoDto.getId());
+        System.out.println(pagamentoDto.getNumero());
+
+        //test throw error
+        if (pagamentoDto.getNumero().equals("0000")) {
+            throw new RuntimeException("não consegui processar");
+        }
         var message = """
                Dados Pagamento: %s
                Numero Pedido: %s

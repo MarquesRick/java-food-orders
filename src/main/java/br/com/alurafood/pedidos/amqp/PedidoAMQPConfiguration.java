@@ -27,7 +27,12 @@ public class PedidoAMQPConfiguration {
     //create Queue
     @Bean
     public Queue orderDetailQueue(){
-        return QueueBuilder.nonDurable("payment_order_detail").build();
+        return QueueBuilder.nonDurable("payment_order_detail").deadLetterExchange("payment_exchange_dlx").build();
+    }
+
+    @Bean
+    public Queue orderDetailDLQQueue(){
+        return QueueBuilder.nonDurable("payment_order_detail_dlq").build();
     }
 
     @Bean
@@ -35,11 +40,21 @@ public class PedidoAMQPConfiguration {
         return ExchangeBuilder.fanoutExchange("payment_exchange").build();
     }
 
+    @Bean
+    public FanoutExchange deadLetterExchange(){
+        return ExchangeBuilder.fanoutExchange("payment_exchange_dlx").build();
+    }
+
     //binding
     @Bean
-    public Binding bindingPaymentOrder(FanoutExchange fanoutExchange){
-        return BindingBuilder.bind(orderDetailQueue()).to(fanoutExchange);
+    public Binding bindingPaymentOrder(){
+        return BindingBuilder.bind(orderDetailQueue()).to(fanoutExchange());
     }
+    @Bean
+    public Binding bindingPaymentOrderDLX(){
+        return BindingBuilder.bind(orderDetailDLQQueue()).to(deadLetterExchange());
+    }
+
 
     @Bean
     public RabbitAdmin createRabbitAdmin(ConnectionFactory conn){
